@@ -7,6 +7,7 @@ set -euo pipefail
 VERSION=0.1.0
 PROGRAM=$0
 DESCRIPTION="Generate a Table of Contents from Markdown"
+UL_SPECIFIER='-'
 
 usage(){
 >&2 cat << EOF
@@ -18,6 +19,7 @@ Usage:   $0 [options] <infile.md>
 
 Options:
 
+     -s | specifier      symbol ("-", "*", or "+") to use for ToC (default: "-")
      -h | help           display this help message
      -v | version        display version
 
@@ -30,7 +32,7 @@ print_ver(){
    exit 0
 }
 
-args=$(getopt -a -o hv --long help,version -- "$@")
+args=$(getopt -a -o hvs: --long help,version,specifier: -- "$@")
 if [[ $? -gt 0 ]]; then
   usage
 fi
@@ -39,13 +41,19 @@ eval set -- ${args}
 while :
 do
   case $1 in
-    -h | --help)    usage      ; shift   ;;
-    -v | --version) print_ver  ; shift   ;;
+    -h | --help)      usage            ; shift    ;;
+    -v | --version)   print_ver        ; shift    ;;
+    -s | --specifier) UL_SPECIFIER=$2  ; shift 2  ;;
     --) shift; break ;;
     *) >&2 echo Unsupported option: $1
        usage ;;
   esac
 done
+
+if [[ ! ${UL_SPECIFIER} =~ [-+*] ]]; then
+   >&2 echo 'Please enter "-", "+", or "*" (with quotes) for the specifier'
+   exit 1
+fi
 
 if [[ $# -eq 0 ]]; then
   usage
@@ -83,19 +91,19 @@ echo -e "## Table of Contents\n"
 for LINE in "${TOC[@]}"; do
     case "${LINE}" in
         '#####'*)
-          echo -n "        - "
+          echo -n "        ${UL_SPECIFIER} "
           ;;
         '####'*)
-          echo -n "      - "
+          echo -n "      ${UL_SPECIFIER} "
           ;;
         '###'*)
-          echo -n "    - "
+          echo -n "    ${UL_SPECIFIER} "
           ;;
         '##'*)
-          echo -n "  - "
+          echo -n "  ${UL_SPECIFIER} "
           ;;
         '#'*)
-          echo -n "- "
+          echo -n "${UL_SPECIFIER} "
           ;;
     esac
 
