@@ -1,6 +1,57 @@
 #!/usr/bin/env bash
+#
+# Forked from https://github.com/Lirt/markdown-toc-bash/
+#
+set -euo pipefail
 
-FILE=${1:?No file was specified as first argument}
+VERSION=0.1.0
+PROGRAM=$0
+DESCRIPTION="Generate a Table of Contents from Markdown"
+
+usage(){
+>&2 cat << EOF
+
+Program: ${PROGRAM} (${DESCRIPTION})
+Version: ${VERSION}
+
+Usage:   $0 [options] <infile.md>
+
+Options:
+
+     -h | help           display this help message
+     -v | version        display version
+
+EOF
+exit 1
+}
+
+print_ver(){
+   >&2 echo ${VERSION}
+   exit 0
+}
+
+args=$(getopt -a -o hv --long help,version -- "$@")
+if [[ $? -gt 0 ]]; then
+  usage
+fi
+
+eval set -- ${args}
+while :
+do
+  case $1 in
+    -h | --help)    usage      ; shift   ;;
+    -v | --version) print_ver  ; shift   ;;
+    --) shift; break ;;
+    *) >&2 echo Unsupported option: $1
+       usage ;;
+  esac
+done
+
+if [[ $# -eq 0 ]]; then
+  usage
+fi
+
+FILE=$1
 
 declare -a TOC
 CODE_BLOCK=0
