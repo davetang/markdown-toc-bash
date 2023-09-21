@@ -21,7 +21,7 @@ To generate ToC, run following command. The ToC will be echoed to command line. 
 ## TODO
 
  - [ ] Input from STDIN
- - [ ] Option to add ToC directly into the Markdown file
+ - [x] Option to add ToC directly into the Markdown file
 
 ## Contribution
 

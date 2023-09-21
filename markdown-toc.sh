@@ -8,6 +8,7 @@ VERSION=0.1.0
 PROGRAM=$0
 DESCRIPTION="Generate a Table of Contents from Markdown"
 UL_SPECIFIER='-'
+INSERT=0
 
 usage(){
 >&2 cat << EOF
@@ -20,6 +21,7 @@ Usage:   $0 [options] <infile.md>
 Options:
 
      -s | specifier      symbol ("-", "*", or "+") to use for ToC (default: "-")
+     -i | insert         directly insert ToC into input (overwrites original)
      -h | help           display this help message
      -v | version        display version
 
@@ -32,7 +34,7 @@ print_ver(){
    exit 0
 }
 
-args=$(getopt -a -o hvs: --long help,version,specifier: -- "$@")
+args=$(getopt -a -o ihvs: --long insert,help,version,specifier: -- "$@")
 if [[ $? -gt 0 ]]; then
   usage
 fi
@@ -43,6 +45,7 @@ do
   case $1 in
     -h | --help)      usage            ; shift    ;;
     -v | --version)   print_ver        ; shift    ;;
+    -i | --insert)    INSERT=1         ; shift    ;;
     -s | --specifier) UL_SPECIFIER=$2  ; shift 2  ;;
     --) shift; break ;;
     *) >&2 echo Unsupported option: $1
@@ -60,6 +63,8 @@ if [[ $# -eq 0 ]]; then
 fi
 
 FILE=$1
+TOC_FILE=${FILE}.this.contains.the.toc
+TMP_FILE=${FILE}.this.is.a.temporary.file
 
 declare -a TOC
 CODE_BLOCK=0
@@ -87,23 +92,23 @@ while read -r LINE; do
     fi
 done < <(grep -v '## Table of Contents' "${FILE}")
 
-echo -e "## Table of Contents\n"
+echo -e "## Table of Contents\n" > ${TOC_FILE}
 for LINE in "${TOC[@]}"; do
     case "${LINE}" in
         '#####'*)
-          echo -n "        ${UL_SPECIFIER} "
+          echo -n "        ${UL_SPECIFIER} " >> ${TOC_FILE}
           ;;
         '####'*)
-          echo -n "      ${UL_SPECIFIER} "
+          echo -n "      ${UL_SPECIFIER} " >> ${TOC_FILE}
           ;;
         '###'*)
-          echo -n "    ${UL_SPECIFIER} "
+          echo -n "    ${UL_SPECIFIER} " >> ${TOC_FILE}
           ;;
         '##'*)
-          echo -n "  ${UL_SPECIFIER} "
+          echo -n "  ${UL_SPECIFIER} " >> ${TOC_FILE}
           ;;
         '#'*)
-          echo -n "${UL_SPECIFIER} "
+          echo -n "${UL_SPECIFIER} " >> ${TOC_FILE}
           ;;
     esac
 
@@ -121,5 +126,37 @@ for LINE in "${TOC[@]}"; do
     LINK=$(tr -s "-" <<< "${LINK}")
 
     # Print in format [Very Special Heading](#very-special-heading)
-    echo "[${LINE#\#* }](#${LINK})"
+    echo "[${LINE#\#* }](#${LINK})" >> ${TOC_FILE}
 done
+echo -e "\n<!-- END TOC -->" >> ${TOC_FILE}
+
+skip_toc () {
+   local FILE=$1
+   SKIP=0
+   NR=0
+   while read -r LINE; do
+      NR=$((NR + 1))
+      # Assuming that the ToC starts on the first line
+      if [[ ${LINE} =~ "Table of Contents" && ${NR} == 1 ]]; then
+         SKIP=1
+         continue
+      fi
+      if [[ ${LINE} =~ "END TOC" ]]; then
+         SKIP=0
+         continue
+      fi
+
+      if [[ ${SKIP} == 0 ]]; then
+         echo ${LINE}
+      fi
+   done < ${FILE}
+}
+
+if [[ ${INSERT} == 0 ]]; then
+   cat ${TOC_FILE}
+else
+   cp ${FILE} ${FILE}.bk
+   cat ${TOC_FILE} <(skip_toc ${FILE}) > ${TMP_FILE}
+   mv -f ${TMP_FILE} ${FILE}
+fi
+rm ${TOC_FILE}
