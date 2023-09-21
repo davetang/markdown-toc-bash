@@ -18,6 +18,11 @@ To generate ToC, run following command. The ToC will be echoed to command line. 
 ./markdown-toc.sh README.md
 ```
 
+## TODO
+
+ - [ ] Input from STDIN
+ - [ ] Option to add ToC directly into the Markdown file
+
 ## Contribution
 
 Any issues or improvements can be reported using GitHub issues.
