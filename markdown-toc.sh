@@ -131,7 +131,7 @@ for LINE in "${TOC[@]}"; do
     # Print in format [Very Special Heading](#very-special-heading)
     echo "[${LINE#\#* }](#${LINK})" >> ${TOC_FILE}
 done
-echo -e "\n<!-- END TOC -->" >> ${TOC_FILE}
+echo -ne "\n" >> ${TOC_FILE}
 
 skip_toc () {
    local FILE=$1
@@ -143,10 +143,13 @@ skip_toc () {
       if [[ ${LINE} =~ "Table of Contents" && ${NR} == 1 ]]; then
          SKIP=1
          continue
-      fi
-      if [[ ${LINE} =~ "END TOC" ]]; then
+      # If no ToC
+      elif [[ ${NR} == 1 ]]; then
          SKIP=0
-         continue
+      fi
+      # Assume first encountered header is the end of the ToC
+      if [[ ${LINE} =~ ^# ]]; then
+         SKIP=0
       fi
 
       if [[ ${SKIP} == 0 ]]; then
