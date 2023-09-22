@@ -9,6 +9,7 @@ PROGRAM=$0
 DESCRIPTION="Generate a Table of Contents from Markdown"
 UL_SPECIFIER='-'
 INSERT=0
+BACKUP=1
 
 usage(){
 >&2 cat << EOF
@@ -22,6 +23,7 @@ Options:
 
      -s | specifier      symbol ("-", "*", or "+") to use for ToC (default: "-")
      -i | insert         directly insert ToC into input (overwrites original)
+     -n | no-backup      no backup file when using the insert option (default: false)
      -h | help           display this help message
      -v | version        display version
 
@@ -34,7 +36,7 @@ print_ver(){
    exit 0
 }
 
-args=$(getopt -a -o ihvs: --long insert,help,version,specifier: -- "$@")
+args=$(getopt -a -o inhvs: --long no-backup,insert,help,version,specifier: -- "$@")
 if [[ $? -gt 0 ]]; then
   usage
 fi
@@ -46,6 +48,7 @@ do
     -h | --help)      usage            ; shift    ;;
     -v | --version)   print_ver        ; shift    ;;
     -i | --insert)    INSERT=1         ; shift    ;;
+    -n | --no-backup) BACKUP=0         ; shift    ;;
     -s | --specifier) UL_SPECIFIER=$2  ; shift 2  ;;
     --) shift; break ;;
     *) >&2 echo Unsupported option: $1
@@ -155,7 +158,9 @@ skip_toc () {
 if [[ ${INSERT} == 0 ]]; then
    cat ${TOC_FILE}
 else
-   cp ${FILE} ${FILE}.bk
+   if [[ ${BACKUP} == 1 ]]; then
+      cp ${FILE} ${FILE}.bk
+   fi
    cat ${TOC_FILE} <(skip_toc ${FILE}) > ${TMP_FILE}
    mv -f ${TMP_FILE} ${FILE}
 fi
