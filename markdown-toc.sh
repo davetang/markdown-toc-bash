@@ -153,7 +153,7 @@ skip_toc () {
       fi
 
       if [[ ${SKIP} == 0 ]]; then
-         echo ${LINE}
+         echo "${LINE}"
       fi
    done < ${FILE}
 }
