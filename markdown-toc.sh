@@ -137,7 +137,7 @@ skip_toc () {
    local FILE=$1
    SKIP=0
    NR=0
-   while read -r LINE; do
+   while IFS= read -r LINE; do
       NR=$((NR + 1))
       # Assuming that the ToC starts on the first line
       if [[ ${LINE} =~ "Table of Contents" && ${NR} == 1 ]]; then
