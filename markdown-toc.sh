@@ -4,12 +4,12 @@
 #
 set -euo pipefail
 
-VERSION=0.1.0
+VERSION=0.1.1
 PROGRAM=$0
-DESCRIPTION="Generate a Table of Contents from Markdown"
+DESCRIPTION="Generate a Table of Contents from a Markdown document"
 UL_SPECIFIER='-'
 INSERT=0
-BACKUP=1
+BACKUP=0
 
 usage(){
 >&2 cat << EOF
@@ -23,7 +23,7 @@ Options:
 
      -s | specifier      symbol ("-", "*", or "+") to use for ToC (default: "-")
      -i | insert         directly insert ToC into input (overwrites original)
-     -n | no-backup      no backup file when using the insert option (default: false)
+     -b | backup         create a backup file when using the insert option (default: false)
      -h | help           display this help message
      -v | version        display version
 
@@ -48,7 +48,7 @@ do
     -h | --help)      usage            ; shift    ;;
     -v | --version)   print_ver        ; shift    ;;
     -i | --insert)    INSERT=1         ; shift    ;;
-    -n | --no-backup) BACKUP=0         ; shift    ;;
+    -n | --backup)    BACKUP=1         ; shift    ;;
     -s | --specifier) UL_SPECIFIER=$2  ; shift 2  ;;
     --) shift; break ;;
     *) >&2 echo Unsupported option: $1
